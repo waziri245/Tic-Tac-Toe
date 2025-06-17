@@ -1,16 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <string.h>
 
 char board[3][3];
 char user_symbol;
 char bot_symbol;
 int current_player;
+int difficulty_mode;
 
+void hard_mode(int *row, int *column);
+void easy_mode(int *row, int *column);
 int check_winner(int row, int column);
 int check_draw(void);
 
+char get_user_symbol() { return user_symbol; }
+char get_bot_symbol() { return bot_symbol; }
+int get_current_player() { return current_player; } // 0=user, 1=bot
 
 void init_game(void) {
     srand(time(NULL));
@@ -21,18 +26,6 @@ void init_game(void) {
         }
     }
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            printf("%c", board[i][j]);
-            if (j < 2) {
-                printf("|"); // Print a separator between columns
-            }
-        }
-        printf("\n");
-        if (i < 2) {
-            printf("-----\n"); // Print a separator between rows
-        }
-    }
 
     int random_symbol = rand() % 2;  // 0 = O, 1 = X
     
@@ -66,16 +59,22 @@ void init_game(void) {
 }
 
 int make_move(int row, int column) {
-    if (board[row][column] != ' ') {
-        return -1;
+    if (current_player == 0) {
+        // User's move
+        if (board[row][column] != ' ') return -1;
+        board[row][column] = user_symbol;
+    } else {
+        // Bot's move
+        if (difficulty_mode == 0) {
+            // Random move
+            easy_mode(&row, &column);
+            board[row][column] = bot_symbol;
+        } else {
+            // Minimax
+            hard_mode(&row, &column);
+            board[row][column] = bot_symbol;
+        }
     }
-    else {
-        if (current_player == 0) {
-                board[row][column] = user_symbol;
-        }
-        else {
-                board[row][column] = bot_symbol;  
-        }
 
         if (check_winner(row, column)) {
             return 1;
@@ -86,7 +85,6 @@ int make_move(int row, int column) {
         // switch player
         current_player = 1 - current_player;
         return 0;
-    }
 }
 
 int check_winner(int row, int column) {
@@ -147,9 +145,42 @@ int check_draw() {
     return 1;  // No empty spots → draw
 }
 
-
-int main(void) {
-    init_game();
-    return 0;
+void set_difficulty(int mode){
+    difficulty_mode = mode;
 }
 
+void easy_mode(int *row, int *column) {
+    int empty[9][2];
+    int count = 0;  
+
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == ' ') {
+                empty[count][0] = i;
+                empty[count][1] = j;
+                count ++;
+            }
+        }
+    }
+
+    int r = rand() % count;
+    *row = empty[r][0];
+    *column = empty[r][1];
+}
+
+void hard_mode(int *row, int *column) {
+
+}
+
+int main() {
+    srand(time(NULL));  // seed randomness once
+    // Pretend some cells are filled
+    board[0][0] = 'X';
+    board[1][1] = 'O';
+
+    int row, col;
+    easy_mode(&row, &col);
+    printf("Bot picks: (%d, %d)\n", row, col);
+
+    return 0;
+}
