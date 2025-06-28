@@ -1,0 +1,39 @@
+name: Run Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 🛠️ Build C backend (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd backend
+          make
+
+      - name: 🛠️ Build C backend (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd backend
+          ./build.bat
+
+      - name: ✅ Run tests
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+          python -m pytest tests/ -v
