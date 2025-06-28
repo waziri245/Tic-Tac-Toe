@@ -1,9 +1,16 @@
 import pytest
 from ctypes import CDLL, c_int, byref
+import platform
+import os
 
 # Load the compiled C shared library
-lib = CDLL('./libgame_logic.so')
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if platform.system() == "Windows":
+    lib_path = os.path.join(current_dir, "..", "shared", "libgame_logic.dll")
+else:
+    lib_path = os.path.join(current_dir, "..", "shared", "libgame_logic.so")
 
+lib = CDLL(lib_path)
 # Set return types for getter functions
 lib.get_user_symbol.restype = c_int
 lib.get_bot_symbol.restype = c_int
